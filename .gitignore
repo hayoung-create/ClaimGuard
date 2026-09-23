@@ -1,0 +1,21 @@
+.venv/
+.venvs/
+__pycache__/
+*.pyc
+*:Zone.Identifier
+.env
+.openai/
+data/runtime/
+data/fused_manifests/
+data/fused_source/*
+!data/fused_source/.gitkeep
+data/results/*
+!data/results/.gitkeep
+runs/
+downloads/
+weights/*
+!weights/manifest.json
+vendor/
+발표용 추론 이미지/
+*.pdf
+*.pptx
