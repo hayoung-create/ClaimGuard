@@ -18,4 +18,5 @@ weights/*
 vendor/
 발표용 추론 이미지/
 *.pdf
+!docs/*.pdf
 *.pptx

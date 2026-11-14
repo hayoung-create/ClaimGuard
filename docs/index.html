@@ -41,7 +41,6 @@ nav.top .brand span{color:var(--accent)}
 nav.top ul{display:flex;gap:18px;list-style:none}
 nav.top ul a{color:var(--muted);text-decoration:none;font-size:.9rem;white-space:nowrap}
 nav.top ul a:hover{color:var(--ink)}
-nav.top ul a.mine-link{color:var(--accent);font-weight:700}
 @media (max-width:760px){nav.top ul{display:none}}
 
 /* hero */
@@ -214,8 +213,8 @@ table.t td:last-child b{color:var(--accent)}
 .stack span{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 11px;font-size:.88rem}
 .stack span.me{border-color:var(--accent);color:var(--accent);font-weight:700}
 .learn{font-size:1.15rem;font-weight:700;border-left:4px solid var(--accent);padding:6px 0 6px 18px}
-.links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-@media (max-width:620px){.links{grid-template-columns:1fr}}
+.links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.links{grid-template-columns:1fr}}
 .link-card{display:grid;grid-template-columns:52px 1fr 24px;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;text-decoration:none;color:var(--ink);box-shadow:var(--shadow);transition:border-color .15s,transform .15s}
 .link-card:hover{border-color:var(--accent);transform:translateY(-2px)}
 .link-icon{width:52px;height:52px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center}
@@ -238,7 +237,7 @@ dialog.lb img{max-height:90vh;border-radius:10px}
   <ul>
     <li><a href="#problem">문제</a></li>
     <li><a href="#how">작동 원리</a></li>
-    <li><a class="mine-link" href="#role">내가 맡은 일</a></li>
+    <li><a href="#role">내가 맡은 일</a></li>
     <li><a href="#screens">화면</a></li>
     <li><a href="#limits">한계</a></li>
     <li><a href="#links">링크</a></li>
@@ -499,6 +498,11 @@ dialog.lb img{max-height:90vh;border-radius:10px}
     <a class="link-card" href="https://github.com/hayoung-create/ClaimGuard/blob/main/%EC%B0%A8%EB%9F%89%ED%8C%8C%EC%86%90%EC%9D%B4%EB%AF%B8%EC%A7%80%20%ED%8F%AC%EB%A0%8C%EC%8B%9D%20%EC%8B%9C%EC%8A%A4%ED%85%9C%20%EA%B2%B0%EA%B3%BC%EB%B3%B4%EA%B3%A0%EC%84%9C.pdf" target="_blank" rel="noopener">
       <span class="link-icon"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8M7 12l3-3 2 2 4-4"/></svg></span>
       <span class="link-body"><b>발표자료</b><small>차량파손이미지 포렌식 시스템 결과보고서 (PDF)</small></span>
+      <span class="link-arrow">→</span>
+    </a>
+    <a class="link-card" href="ClaimGuard_portfolio.pdf" target="_blank" rel="noopener">
+      <span class="link-icon"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span>
+      <span class="link-body"><b>포트폴리오</b><small>박하영 담당 부분 1페이지 요약 (PDF)</small></span>
       <span class="link-arrow">→</span>
     </a>
   </div>
