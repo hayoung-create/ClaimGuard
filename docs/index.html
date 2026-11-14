@@ -213,8 +213,8 @@ table.t td:last-child b{color:var(--accent)}
 .stack span{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 11px;font-size:.88rem}
 .stack span.me{border-color:var(--accent);color:var(--accent);font-weight:700}
 .learn{font-size:1.15rem;font-weight:700;border-left:4px solid var(--accent);padding:6px 0 6px 18px}
-.links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-@media (max-width:900px){.links{grid-template-columns:1fr}}
+.links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:680px){.links{grid-template-columns:1fr}}
 .link-card{display:grid;grid-template-columns:52px 1fr 24px;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;text-decoration:none;color:var(--ink);box-shadow:var(--shadow);transition:border-color .15s,transform .15s}
 .link-card:hover{border-color:var(--accent);transform:translateY(-2px)}
 .link-icon{width:52px;height:52px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center}
@@ -225,6 +225,13 @@ table.t td:last-child b{color:var(--accent)}
 footer{padding:40px 0 56px;border-top:1px solid var(--line);color:var(--muted);font-size:.86rem}
 footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 
+.video{position:relative;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line);box-shadow:var(--shadow)}
+.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.demo-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px}
+.demo-steps div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.demo-steps b{display:block;font-size:.95rem}
+.demo-steps span{color:var(--muted);font-size:.85rem}
+@media (max-width:760px){.demo-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
 dialog.lb{border:0;padding:0;background:transparent;max-width:min(1200px,96vw);margin:auto}
 dialog.lb::backdrop{background:rgba(0,0,0,.8)}
 dialog.lb img{max-height:90vh;border-radius:10px}
@@ -236,6 +243,7 @@ dialog.lb img{max-height:90vh;border-radius:10px}
   <a class="brand" href="#">Claim<span>Guard</span></a>
   <ul>
     <li><a href="#problem">문제</a></li>
+    <li><a href="#demo">데모</a></li>
     <li><a href="#how">작동 원리</a></li>
     <li><a href="#role">내가 맡은 일</a></li>
     <li><a href="#screens">화면</a></li>
@@ -299,9 +307,25 @@ dialog.lb img{max-height:90vh;border-radius:10px}
   </div>
 </div></section>
 
-<!-- 02 HOW IT WORKS -->
+<!-- 02 DEMO -->
+<section id="demo"><div class="wrap">
+  <p class="eyebrow">02 · Demo</p>
+  <h2>사진을 올리면, 심사자가 근거와 함께 판단합니다</h2>
+  <p class="desc">고객이 사고 사진을 접수하고, 3개 모델이 분석한 결과를 심사자가 히트맵 · 모델별 점수와 함께 확인해 승인 또는 반송하는 전체 흐름입니다.</p>
+  <div class="video">
+    <iframe src="https://www.youtube-nocookie.com/embed/aQTq3eBxUcA?rel=0" title="ClaimGuard 시연 영상" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>
+  <div class="demo-steps">
+    <div><b>① 고객 접수</b><span>사고 사진 업로드 · 검증</span></div>
+    <div><b>② 분석 진행</b><span>3개 모델 순차 실행</span></div>
+    <div><b>③ 결과 확인</b><span>히트맵 · 모델별 점수 · 판정</span></div>
+    <div><b>④ 심사자 판단</b><span>근거 확인 후 승인 / 반송</span></div>
+  </div>
+</div></section>
+
+<!-- 03 HOW IT WORKS -->
 <section id="how"><div class="wrap">
-  <p class="eyebrow">02 · How it works</p>
+  <p class="eyebrow">03 · How it works</p>
   <h2>사진 한 장이 "검토대상" 판정이 되기까지</h2>
   <p class="desc">앞펜더에 AI로 손상을 그려 넣은 사진 한 장을 따라가 봅니다. <span class="tag me">My part</span> 표시는 제가 맡은 단계입니다. (점수는 설명을 위한 예시입니다.)</p>
 
@@ -315,7 +339,7 @@ dialog.lb img{max-height:90vh;border-radius:10px}
     </div>
     <p class="fnote">세 모델은 요구하는 Python · PyTorch 버전이 달라 각자 독립 환경의 프로세스로 실행되고, GPU 한 장을 나눠 쓰도록 TruFor → FUSED → Recapture 순서로 돌아갑니다.</p>
 
-    <div class="fstep me"><div class="n">5</div><div><h4>결과 검증 · 통합 <span class="tag me">My part</span></h4><p>세 결과가 약속한 형식인지, 실제 모델에서 나왔는지, 모두 끝났는지 확인한 뒤에만 가중 평균으로 통합합니다. (자세한 내용은 04 섹션)</p></div><div class="out">0.35×0.82 + 0.50×0.91<br>+ 0.15×0.08 = <b>0.754</b></div></div>
+    <div class="fstep me"><div class="n">5</div><div><h4>결과 검증 · 통합 <span class="tag me">My part</span></h4><p>세 결과가 약속한 형식인지, 실제 모델에서 나왔는지, 모두 끝났는지 확인한 뒤에만 가중 평균으로 통합합니다. (자세한 내용은 05 섹션)</p></div><div class="out">0.35×0.82 + 0.50×0.91<br>+ 0.15×0.08 = <b>0.754</b></div></div>
 
     <div class="fstep"><div class="n">6</div><div><h4>ROI 임계값 판정 <span class="tag team">팀</span> <span class="tag me">화면 · 계산 My part</span></h4><p>통합 점수를 임계값과 비교해 사람 검토(HUMAN_REVIEW)와 자동 처리(AOS)로 나눕니다. 임계값은 검토비용과 놓친 조작의 손실을 따져 고릅니다.</p></div><div class="out">75.4% ≥ 63.0%<br><span class="r">→ HUMAN_REVIEW · 검토대상</span></div></div>
 
@@ -361,7 +385,7 @@ dialog.lb img{max-height:90vh;border-radius:10px}
 <div class="mine-zone">
 
 <section id="role"><div class="wrap">
-  <p class="eyebrow">03 · My Role</p>
+  <p class="eyebrow">04 · My Role</p>
   <p class="my-part">My part · <span>박하영</span></p>
   <h2>모델이 낸 결과가 심사자 화면까지 올바르게 가도록</h2>
   <p class="desc">모델 파인튜닝은 팀원이 맡았고, 저는 <b>모델 출력 이후 구간</b>을 맡았습니다. 모델 출력의 최종 검증과 웹 프론트엔드 전체입니다.</p>
@@ -393,7 +417,7 @@ dialog.lb img{max-height:90vh;border-radius:10px}
 </div></section>
 
 <section id="verify"><div class="wrap">
-  <p class="eyebrow">04 · Model Output Verification</p>
+  <p class="eyebrow">05 · Model Output Verification</p>
   <h2>모델 점수가 화면에 오르기 전, 다섯 번 확인합니다</h2>
   <p class="desc">세 모델은 요구하는 라이브러리 버전이 달라 각자 독립 프로세스로 실행됩니다. 따라서 각 결과가 "약속한 형식인지, 진짜 모델에서 나왔는지"를 앱 쪽에서 반드시 검증해야 합니다.</p>
 
@@ -423,7 +447,7 @@ dialog.lb img{max-height:90vh;border-radius:10px}
 </div></section>
 
 <section id="design"><div class="wrap">
-  <p class="eyebrow">05 · Design Strategy</p>
+  <p class="eyebrow">06 · Design Strategy</p>
   <h2>흔한 방식 대신 무엇을, 왜 정했나</h2>
   <p class="desc">Streamlit 기본 위젯으로는 일괄 업로드 · 단계형 진행바 · 히트맵 비교가 어려워, 화면은 Vanilla JS 커스텀 컴포넌트로 만들고 Streamlit은 모델 실행 서버로 두어 양방향 이벤트로 연결했습니다.</p>
   <div class="grid g4">
@@ -435,7 +459,7 @@ dialog.lb img{max-height:90vh;border-radius:10px}
 </div></section>
 
 <section id="screens"><div class="wrap">
-  <p class="eyebrow">06 · Screens</p>
+  <p class="eyebrow">07 · Screens</p>
   <h2>직접 구현한 화면</h2>
   <div class="flow-legend"><span class="step s1">① 고객 접수</span>→<span class="step s2">② 내부 분석</span>→<span class="step s3">③ 심사자 판단</span><span>· 이미지를 누르면 크게 볼 수 있습니다</span></div>
   <div class="grid g3">
@@ -450,7 +474,7 @@ dialog.lb img{max-height:90vh;border-radius:10px}
 </div></section>
 
 <section id="trouble"><div class="wrap">
-  <p class="eyebrow">07 · Troubleshooting</p>
+  <p class="eyebrow">08 · Troubleshooting</p>
   <h2>구현하면서 실제로 부딪힌 문제</h2>
   <table class="t">
     <thead><tr><th>문제</th><th>원인</th><th>해결 → 결과</th></tr></thead>
@@ -466,7 +490,7 @@ dialog.lb img{max-height:90vh;border-radius:10px}
 </div><!-- /mine-zone -->
 
 <section id="limits"><div class="wrap">
-  <p class="eyebrow">08 · Limits &amp; Next</p>
+  <p class="eyebrow">09 · Limits &amp; Next</p>
   <h2>아직 부족한 점과 다음 단계</h2>
   <div class="grid g3">
     <div class="card limit"><h4>데이터 양과 부위 범위</h4><p>약 500세트 데이터로는 수많은 AI 조작 패턴과 사고 유형을 모두 덮기 어렵고, 차량 주요 부위 위주로만 학습했습니다.</p><p class="next"><b>다음</b> 데이터 대형화와 차량 전 부위로 탐지 범위 확대</p></div>
@@ -476,7 +500,7 @@ dialog.lb img{max-height:90vh;border-radius:10px}
 </div></section>
 
 <section id="stack"><div class="wrap">
-  <p class="eyebrow">09 · Stack &amp; Learning</p>
+  <p class="eyebrow">10 · Stack &amp; Learning</p>
   <h2>기술 스택</h2>
   <div class="stack" style="margin:14px 0 8px">
     <span class="me">HTML / CSS</span><span class="me">Vanilla JS</span><span class="me">IndexedDB</span><span class="me">Streamlit Components</span><span class="me">JSON Schema</span><span class="me">unittest · Playwright</span>
@@ -487,9 +511,14 @@ dialog.lb img{max-height:90vh;border-radius:10px}
 </div></section>
 
 <section id="links"><div class="wrap">
-  <p class="eyebrow">10 · Links</p>
+  <p class="eyebrow">11 · Links</p>
   <h2>더 자세히 보기</h2>
   <div class="links">
+    <a class="link-card" href="https://www.youtube.com/watch?v=aQTq3eBxUcA" target="_blank" rel="noopener">
+      <span class="link-icon"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9.5v5l4.5-2.5z" fill="currentColor"/></svg></span>
+      <span class="link-body"><b>시연 영상</b><small>YouTube에서 전체 화면 흐름 보기</small></span>
+      <span class="link-arrow">→</span>
+    </a>
     <a class="link-card" href="https://github.com/hayoung-create/ClaimGuard" target="_blank" rel="noopener">
       <span class="link-icon"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.7 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5Z"/></svg></span>
       <span class="link-body"><b>GitHub 저장소</b><small>전체 소스 코드 · README · 실행 방법</small></span>
