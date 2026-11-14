@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClaimGuard · 박하영</title>
+<meta name="description" content="AI로 조작된 차량 사고 사진을 3개의 포렌식 모델로 탐지해 보험 심사를 지원하는 웹 ClaimGuard — 프론트엔드 및 모델 결과 검증 담당 박하영">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f172a'/%3E%3Cpath d='M16 5l9 4v6c0 6-3.8 10-9 12-5.2-2-9-6-9-12V9l9-4z' fill='%2306b6d4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f8fb; --surface:#ffffff; --surface-2:#eef3f8; --ink:#0f1b2d; --muted:#5b6b7f; --line:#dbe3ec;
+  --accent:#0e7490; --accent-soft:#e0f2f7; --navy:#0f2a44; --red:#b42318; --red-soft:#fdecea; --green:#15803d; --green-soft:#e7f6ec; --amber:#b45309; --amber-soft:#fef3e2;
+  --bar-base:#94a3b8;
+  --shadow:0 1px 2px rgba(15,27,45,.06),0 8px 24px rgba(15,27,45,.06);
+  --mine:#dce8f2; --mine-line:#c5d6e5;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0b121c; --surface:#121c29; --surface-2:#182536; --ink:#e6edf5; --muted:#93a4b8; --line:#243346;
+  --accent:#38bdd8; --accent-soft:#0f3340; --navy:#cfe3f5; --red:#f87171; --red-soft:#3a1717; --green:#4ade80; --green-soft:#12301d; --amber:#fbbf24; --amber-soft:#36280c;
+  --bar-base:#52637a; --shadow:none; --mine:#16273b; --mine-line:#24405c;}}
+:root[data-theme="dark"]{
+  --bg:#0b121c; --surface:#121c29; --surface-2:#182536; --ink:#e6edf5; --muted:#93a4b8; --line:#243346;
+  --accent:#38bdd8; --accent-soft:#0f3340; --navy:#cfe3f5; --red:#f87171; --red-soft:#3a1717; --green:#4ade80; --green-soft:#12301d; --amber:#fbbf24; --amber-soft:#36280c;
+  --bar-base:#52637a; --shadow:none; --mine:#16273b; --mine-line:#24405c;}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:var(--bg);color:var(--ink);line-height:1.65;font-size:16px;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+img{max-width:100%;display:block}
+code{font-family:ui-monospace,Consolas,monospace;font-size:.86em;background:var(--surface-2);padding:.1em .4em;border-radius:4px;word-break:break-all}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+.grid>*,.problem>*,.compare>*{min-width:0}
+
+/* nav */
+nav.top{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav.top .wrap{display:flex;align-items:center;justify-content:space-between;height:56px;gap:12px}
+nav.top .brand{font-weight:900;color:var(--ink);text-decoration:none;white-space:nowrap}
+nav.top .brand span{color:var(--accent)}
+nav.top ul{display:flex;gap:18px;list-style:none}
+nav.top ul a{color:var(--muted);text-decoration:none;font-size:.9rem;white-space:nowrap}
+nav.top ul a:hover{color:var(--ink)}
+nav.top ul a.mine-link{color:var(--accent);font-weight:700}
+@media (max-width:760px){nav.top ul{display:none}}
+
+/* hero */
+header.hero{padding:64px 0 48px}
+.eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.14em;color:var(--accent);text-transform:uppercase}
+.hero h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:900;line-height:1.15;margin:10px 0 14px;letter-spacing:-.02em}
+.hero h1 span{color:var(--accent)}
+.hero p.lead{font-size:clamp(1rem,2.2vw,1.2rem);color:var(--muted);max-width:740px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:.85rem;color:var(--muted)}
+.chip.me{background:var(--navy);color:var(--bg);border-color:var(--navy);font-weight:700}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:10px;font-weight:700;text-decoration:none;font-size:.95rem;border:1px solid var(--line);color:var(--ink);background:var(--surface)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.hero-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:36px}
+@media (max-width:680px){.hero-stats{grid-template-columns:1fr}}
+.hero-stats .card strong{font-size:2rem;font-weight:900;color:var(--navy);display:block;line-height:1.2}
+.hero-stats .card b{display:block;margin-top:4px}
+.hero-stats .card span{color:var(--muted);font-size:.86rem}
+
+/* sections */
+section{padding:64px 0;border-top:1px solid var(--line)}
+section h2{font-size:clamp(1.4rem,3vw,1.9rem);font-weight:900;letter-spacing:-.01em;margin:6px 0 10px}
+section .desc{color:var(--muted);max-width:780px;margin-bottom:28px}
+h3.sub{font-size:1.1rem;font-weight:900;margin:40px 0 14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow)}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:900px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:620px){.g2,.g3,.g4{grid-template-columns:1fr}}
+
+/* my part zone (03~07) */
+.mine-zone{background:var(--mine)}
+.mine-zone section{border-top-color:var(--mine-line)}
+.mine-zone + section{border-top-color:var(--mine-line)}
+.my-part{font-size:clamp(30px,5vw,42px);font-weight:900;letter-spacing:-.02em;line-height:1.25;color:var(--accent);margin:4px 0 18px}
+.my-part span{color:var(--ink)}
+.tag{font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap;display:inline-block}
+.tag.me{background:var(--accent);color:#fff}
+.tag.team{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+
+/* problem */
+.problem{display:grid;grid-template-columns:1.1fr 1fr;gap:20px;align-items:start}
+@media (max-width:860px){.problem{grid-template-columns:1fr}}
+.reasons{display:grid;gap:12px}
+.reason{display:grid;grid-template-columns:36px 1fr;gap:12px}
+.reason i{font-style:normal;width:36px;height:36px;border-radius:10px;background:var(--accent-soft);color:var(--accent);font-weight:900;display:flex;align-items:center;justify-content:center}
+.reason b{display:block}
+.reason p{color:var(--muted);font-size:.92rem}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.compare figure{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--surface)}
+.compare figure img{width:100%;aspect-ratio:4/3;object-fit:cover;cursor:zoom-in}
+.compare figcaption{position:absolute;left:8px;top:8px;background:rgba(15,27,45,.85);color:#fff;font-size:.78rem;font-weight:700;padding:3px 9px;border-radius:6px}
+.compare figure.fake figcaption{background:var(--red);color:#fff}
+.compare-note{grid-column:1/-1;font-size:.82rem;color:var(--muted)}
+.stats2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.stats2 .card{padding:16px}
+.stats2 strong{font-size:1.6rem;font-weight:900;color:var(--navy);display:block;line-height:1.2}
+.stats2 span{font-size:.84rem;color:var(--muted)}
+.table-wrap{margin-top:28px}
+table.t{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+table.t th{background:var(--navy);color:var(--bg);text-align:left;padding:12px 14px;font-size:.88rem}
+table.t td{padding:13px 14px;border-top:1px solid var(--line);font-size:.92rem;vertical-align:top}
+table.t td:first-child{font-weight:700}
+table.t tr.ours td{background:var(--accent-soft)}
+table.t tr.ours td:first-child{color:var(--accent)}
+@media (max-width:720px){
+  table.t thead{display:none}
+  table.t,table.t tbody,table.t tr,table.t td{display:block;width:100%}
+  table.t tr{border-top:1px solid var(--line);padding:6px 0}
+  table.t td{border:0;padding:5px 14px}
+  table.t td::before{content:attr(data-k);display:block;font-size:.72rem;color:var(--muted);font-weight:700}
+}
+
+/* how it works */
+.flow{display:grid;gap:10px}
+.fstep{display:grid;grid-template-columns:48px 1fr 240px;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow)}
+.fstep.me{border:2px solid var(--accent)}
+.fstep .n{width:48px;height:48px;border-radius:12px;background:var(--surface-2);font-weight:900;font-size:1.1rem;display:flex;align-items:center;justify-content:center;color:var(--navy)}
+.fstep.me .n{background:var(--accent);color:#fff}
+.fstep h4{font-size:1.02rem;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.fstep p{color:var(--muted);font-size:.9rem;margin-top:2px}
+.fstep .out{font-family:ui-monospace,Consolas,monospace;font-size:.84rem;background:var(--surface-2);border-radius:10px;padding:10px 12px;line-height:1.5}
+.fstep .out b{color:var(--accent)}
+.fstep .out .r{color:var(--red);font-weight:700}
+.fparallel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.fparallel .fstep{grid-template-columns:48px 1fr;align-items:start}
+.fparallel .fstep .out{grid-column:1/-1}
+@media (max-width:860px){.fstep{grid-template-columns:48px 1fr}.fstep .out{grid-column:1/-1}.fparallel{grid-template-columns:1fr}}
+.fnote{font-size:.85rem;color:var(--muted);padding:0 4px}
+.principle{margin-top:18px;border-left:4px solid var(--accent);background:var(--accent-soft);padding:16px 20px;border-radius:0 12px 12px 0;font-weight:500}
+.model h4{font-size:1.1rem;font-weight:900}
+.model .role{color:var(--accent);font-weight:700;font-size:.9rem;margin:2px 0 10px}
+.model dl{display:grid;grid-template-columns:52px 1fr;gap:6px 10px;font-size:.88rem}
+.model dt{color:var(--muted);font-weight:700}
+.data-list{list-style:none;display:grid;gap:10px;font-size:.93rem}
+.data-list li b{display:block}
+.data-list li span{color:var(--muted)}
+.bars{display:grid;gap:14px}
+.bar-group b{font-size:.95rem}
+.bar-row{display:grid;grid-template-columns:110px 1fr 46px;gap:10px;align-items:center;font-size:.84rem;margin-top:6px}
+.bar-row .track{height:12px;border-radius:6px;background:var(--surface-2);overflow:hidden}
+.bar-row .track i{display:block;height:100%;border-radius:6px;background:var(--bar-base)}
+.bar-row.after .track i{background:var(--accent)}
+.bar-row span:last-child{font-weight:700;text-align:right}
+.legend{display:flex;gap:14px;font-size:.8rem;color:var(--muted);margin-top:4px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* role */
+.role-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.role-card h3{font-size:1.2rem;font-weight:900}
+.role-card ul{list-style:none;display:grid;gap:8px;margin-top:10px}
+.role-card li{display:grid;grid-template-columns:64px 1fr;gap:10px;font-size:.95rem}
+.role-card li em{font-style:normal;font-size:.75rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:6px;text-align:center;padding:2px 0;height:fit-content;margin-top:2px}
+.role-card.main{border:2px solid var(--accent)}
+.team-note{margin-top:16px;font-size:.9rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* verification */
+.pipe{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 40px 1fr;gap:10px;align-items:stretch}
+.pipe .model-box{background:var(--surface-2);border-radius:12px;padding:14px;text-align:center}
+.pipe .model-box b{display:block;font-size:1rem}
+.pipe .model-box small{color:var(--muted);font-size:.8rem}
+.pipe .arrow{display:flex;align-items:center;justify-content:center;color:var(--accent);font-weight:900;font-size:1.4rem}
+.pipe .gate{border:2px dashed var(--accent);border-radius:12px;padding:14px;text-align:center;background:var(--accent-soft)}
+.pipe .gate b{color:var(--accent)}
+@media (max-width:820px){.pipe{grid-template-columns:1fr}.pipe .arrow{transform:rotate(90deg);height:28px}}
+.checks{counter-reset:c;display:grid;gap:12px;margin-top:20px}
+.check{display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:start}
+.check::before{counter-increment:c;content:counter(c);width:44px;height:44px;border-radius:12px;background:var(--navy);color:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.1rem}
+.check h4{font-size:1.02rem;margin-bottom:2px}
+.check p{color:var(--muted);font-size:.93rem}
+.outcomes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:22px}
+@media (max-width:620px){.outcomes{grid-template-columns:1fr}}
+.outc{border-radius:12px;padding:14px}
+.outc b{display:block;font-size:.95rem}
+.outc small{font-size:.83rem}
+.outc.review{background:var(--red-soft);color:var(--red)}
+.outc.aos{background:var(--green-soft);color:var(--green)}
+.outc.hold{background:var(--amber-soft);color:var(--amber)}
+
+/* why */
+.why .no{background:var(--red-soft);color:var(--red);border-radius:8px;padding:6px 10px;font-size:.88rem;margin:10px 0 6px}
+.why .yes{background:var(--green-soft);color:var(--green);border-radius:8px;padding:6px 10px;font-size:.88rem;font-weight:700}
+.why h3{font-size:1.08rem;font-weight:900;margin-top:4px}
+.why p{color:var(--muted);font-size:.9rem;margin-top:10px}
+.why .eyebrow{font-size:.7rem}
+
+/* screens */
+.flow-legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;align-items:center;color:var(--muted);font-size:.9rem}
+.step{border-radius:999px;padding:3px 12px;font-weight:700;font-size:.82rem}
+.s1{background:var(--amber-soft);color:var(--amber)}
+.s2{background:var(--accent-soft);color:var(--accent)}
+.s3{background:var(--green-soft);color:var(--green)}
+figure.shot{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+figure.shot img{width:100%;aspect-ratio:16/10;object-fit:cover;object-position:top;border-bottom:1px solid var(--line);cursor:zoom-in}
+figure.shot figcaption{padding:14px 16px}
+figure.shot figcaption b{display:flex;gap:8px;align-items:center;font-size:1rem}
+figure.shot figcaption p{color:var(--muted);font-size:.88rem;margin-top:4px}
+table.t td:last-child b{color:var(--accent)}
+
+/* limits */
+.limit h4{font-size:1.02rem;font-weight:900;margin-bottom:4px}
+.limit p{color:var(--muted);font-size:.92rem}
+.limit .next{margin-top:10px;font-size:.9rem;color:var(--ink)}
+.limit .next b{color:var(--accent)}
+
+.stack{display:flex;flex-wrap:wrap;gap:8px}
+.stack span{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 11px;font-size:.88rem}
+.stack span.me{border-color:var(--accent);color:var(--accent);font-weight:700}
+.learn{font-size:1.15rem;font-weight:700;border-left:4px solid var(--accent);padding:6px 0 6px 18px}
+.links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:620px){.links{grid-template-columns:1fr}}
+.link-card{display:grid;grid-template-columns:52px 1fr 24px;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;text-decoration:none;color:var(--ink);box-shadow:var(--shadow);transition:border-color .15s,transform .15s}
+.link-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.link-icon{width:52px;height:52px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center}
+.link-body b{display:block;font-size:1.08rem}
+.link-body small{color:var(--muted);font-size:.88rem}
+.link-arrow{color:var(--accent);font-weight:900;font-size:1.3rem}
+@media (prefers-reduced-motion:reduce){.link-card{transition:none}.link-card:hover{transform:none}}
+footer{padding:40px 0 56px;border-top:1px solid var(--line);color:var(--muted);font-size:.86rem}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+dialog.lb{border:0;padding:0;background:transparent;max-width:min(1200px,96vw);margin:auto}
+dialog.lb::backdrop{background:rgba(0,0,0,.8)}
+dialog.lb img{max-height:90vh;border-radius:10px}
+</style>
+</head>
+<body>
+
+<nav class="top"><div class="wrap">
+  <a class="brand" href="#">Claim<span>Guard</span></a>
+  <ul>
+    <li><a href="#problem">문제</a></li>
+    <li><a href="#how">작동 원리</a></li>
+    <li><a class="mine-link" href="#role">내가 맡은 일</a></li>
+    <li><a href="#screens">화면</a></li>
+    <li><a href="#limits">한계</a></li>
+    <li><a href="#links">링크</a></li>
+  </ul>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <p class="eyebrow">Image Forensics · Web Service · 2026</p>
+  <h1>AI 보험 사진 심사 지원<br><span>ClaimGuard</span></h1>
+  <p class="lead">보험 청구로 들어온 차량 사고 사진을 <b>서로 다른 조작을 보는 3개의 포렌식 모델</b>로 분석하고, 조작이 의심되는 사진을 근거와 함께 골라 <b>심사자가 추가 검토할 수 있게</b> 돕는 웹입니다.</p>
+  <div class="chips">
+    <span class="chip me">박하영 · 프론트엔드 / 모델 결과 검증 담당</span>
+    <span class="chip">동국대 AI캠퍼스 DAIVE 팀 블루</span>
+    <span class="chip">2026.09</span>
+  </div>
+  <div class="hero-stats">
+    <div class="card"><strong>3종</strong><b>포렌식 모델 앙상블</b><span>포토샵 편집 · AI 인페인팅 · 화면 재촬영</span></div>
+    <div class="card"><strong>&lt; 10초</strong><b>사진 1장 분석 시간</b><span>3개 모델 순차 실행 · 모델 상주 프로세스</span></div>
+    <div class="card"><strong>0.28 → 0.99</strong><b>TruFor 위치 탐지 F1</b><span>파인튜닝 전 → 후 (팀 성과)</span></div>
+  </div>
+</div></header>
+
+<!-- 01 PROBLEM -->
+<section id="problem"><div class="wrap">
+  <p class="eyebrow">01 · Problem</p>
+  <h2>이제는 사고 사진도 AI로 "그려" 낼 수 있습니다</h2>
+  <p class="desc">사고 접수와 사진 제출은 모바일 · 웹 비대면으로 바뀌었고, 심사자는 사진만 보고 보험금을 판단합니다. 그런데 생성형 AI는 멀쩡한 차에 찌그러짐과 긁힘을 자연스럽게 그려 넣을 수 있습니다.</p>
+
+  <div class="problem">
+    <div>
+      <div class="compare">
+        <figure><img src="images/intro/case-original.jpg" alt="손상이 없는 원본 차량 사진" loading="lazy"><figcaption>원본</figcaption></figure>
+        <figure class="fake"><img src="images/intro/case-manipulated.jpg" alt="앞펜더에 AI로 찌그러짐을 그려 넣은 조작 사진" loading="lazy"><figcaption>AI 조작본</figcaption></figure>
+        <p class="compare-note">앞펜더의 찌그러짐은 생성형 AI로 새로 그려 넣은 것입니다. (프로젝트에서 직접 만든 예시, 실제 청구 사례 아님)</p>
+      </div>
+      <div class="stats2">
+        <div class="card"><strong>1조 1,571억 원</strong><span>2025년 보험사기 적발 금액</span></div>
+        <div class="card"><strong>22.4%</strong><span>그중 자동차보험 비중</span></div>
+      </div>
+    </div>
+    <div class="reasons">
+      <div class="reason"><i>1</i><div><b>육안으로는 구별이 어렵다</b><p>AI가 픽셀 · 질감 · 빛 반사까지 새로 만들어, 기존의 편집 흔적 확인이나 눈으로 보는 검토만으로는 판별이 어렵습니다.</p></div></div>
+      <div class="reason"><i>2</i><div><b>조작 방식이 한 가지가 아니다</b><p>포토샵 합성 · 복제, AI 인페인팅, 모니터 화면을 다시 찍은 사진까지. 한 가지 탐지 모델로는 모든 경우를 잡지 못합니다.</p></div></div>
+      <div class="reason"><i>3</i><div><b>제도적 대응은 시간이 걸린다</b><p>2026년 6월 금융당국이 AI 기반 보험사기 방지 TF를 출범했지만, 원본 대조 조회체계는 법 개정이 필요해 시행까지 오래 걸리고 이미지 포렌식 적용은 아직 없습니다.</p></div></div>
+      <div class="reason"><i>4</i><div><b>점수만 주면 심사자는 쓰지 않는다</b><p>모델이 정확해도 "82%" 같은 숫자 하나만 보여 주면 왜 의심스러운지 알 수 없어, 실제 심사에 쓰이기 어렵습니다.</p></div></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="t">
+      <thead><tr><th>기존 방법</th><th>할 수 있는 것</th><th>부족한 점</th></tr></thead>
+      <tbody>
+        <tr><td data-k="기존 방법">심사자 육안 검토</td><td data-k="할 수 있는 것">사진 · 사고 경위 대조</td><td data-k="부족한 점">AI가 새로 그린 손상은 눈으로 구별하기 어려움</td></tr>
+        <tr><td data-k="기존 방법">단일 포렌식 모델</td><td data-k="할 수 있는 것">특정 조작 유형 탐지</td><td data-k="부족한 점">다른 유형(AI 생성, 화면 재촬영)은 놓침</td></tr>
+        <tr><td data-k="기존 방법">원본 대조 조회체계 (검토 중)</td><td data-k="할 수 있는 것">보험사 간 원본 사진 대조</td><td data-k="부족한 점">관련 법 개정 필요, 시행까지 상당한 시간 소요</td></tr>
+        <tr class="ours"><td data-k="ClaimGuard">ClaimGuard</td><td data-k="할 수 있는 것" colspan="2">3종 모델로 조작 유형별 탐지 + 의심 영역 히트맵 · 모델별 점수 · 판정 근거를 함께 제시. <b>AI는 검토 대상을 고를 뿐, 최종 판단은 심사자가 합니다.</b></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div></section>
+
+<!-- 02 HOW IT WORKS -->
+<section id="how"><div class="wrap">
+  <p class="eyebrow">02 · How it works</p>
+  <h2>사진 한 장이 "검토대상" 판정이 되기까지</h2>
+  <p class="desc">앞펜더에 AI로 손상을 그려 넣은 사진 한 장을 따라가 봅니다. <span class="tag me">My part</span> 표시는 제가 맡은 단계입니다. (점수는 설명을 위한 예시입니다.)</p>
+
+  <div class="flow">
+    <div class="fstep me"><div class="n">1</div><div><h4>사진 접수 · 검증 <span class="tag me">My part</span></h4><p>고객이 사진을 올리면 형식 · 용량 · 장 수를 확인하고, 사진 방향(EXIF)을 바로잡아 모델 결과와 화면이 같은 기준을 보게 합니다.</p></div><div class="out">JPEG/PNG · 장당 ≤ 20MB<br>최대 20장 · 전체 ≤ 100MB<br><b>✓ 통과 → 청구번호 발급</b></div></div>
+
+    <div class="fparallel">
+      <div class="fstep"><div class="n">2</div><div><h4>TruFor <span class="tag team">팀</span></h4><p>포토샵 합성 · 복제 · 객체 삭제 같은 전통적 편집 흔적</p></div><div class="out">score <b>0.82</b></div></div>
+      <div class="fstep"><div class="n">3</div><div><h4>FUSED <span class="tag team">팀</span></h4><p>생성형 AI가 새로 그려 넣은 영역 (인페인팅) + 의심 영역 히트맵</p></div><div class="out">score <b>0.91</b> · heatmap.png</div></div>
+      <div class="fstep"><div class="n">4</div><div><h4>Recapture <span class="tag team">팀</span></h4><p>모니터 화면을 다시 찍은 사진 (모아레 패턴)</p></div><div class="out">score <b>0.08</b></div></div>
+    </div>
+    <p class="fnote">세 모델은 요구하는 Python · PyTorch 버전이 달라 각자 독립 환경의 프로세스로 실행되고, GPU 한 장을 나눠 쓰도록 TruFor → FUSED → Recapture 순서로 돌아갑니다.</p>
+
+    <div class="fstep me"><div class="n">5</div><div><h4>결과 검증 · 통합 <span class="tag me">My part</span></h4><p>세 결과가 약속한 형식인지, 실제 모델에서 나왔는지, 모두 끝났는지 확인한 뒤에만 가중 평균으로 통합합니다. (자세한 내용은 04 섹션)</p></div><div class="out">0.35×0.82 + 0.50×0.91<br>+ 0.15×0.08 = <b>0.754</b></div></div>
+
+    <div class="fstep"><div class="n">6</div><div><h4>ROI 임계값 판정 <span class="tag team">팀</span> <span class="tag me">화면 · 계산 My part</span></h4><p>통합 점수를 임계값과 비교해 사람 검토(HUMAN_REVIEW)와 자동 처리(AOS)로 나눕니다. 임계값은 검토비용과 놓친 조작의 손실을 따져 고릅니다.</p></div><div class="out">75.4% ≥ 63.0%<br><span class="r">→ HUMAN_REVIEW · 검토대상</span></div></div>
+
+    <div class="fstep me"><div class="n">7</div><div><h4>심사자 화면 <span class="tag me">My part</span></h4><p>심사자는 원본 ↔ 히트맵, 모델별 점수, 판정 문장을 보고 직접 승인 또는 반송을 결정합니다.</p></div><div class="out">어디: 앞펜더 히트맵<br>무엇이: FUSED 0.91<br>왜: 75.4% ≥ 63.0%</div></div>
+  </div>
+  <p class="principle">원칙: AI는 보험사기를 확정하지 않습니다. 추가로 확인할 사진을 근거와 함께 골라 줄 뿐이고, 원본 요청 · 현장 대조 같은 후속 조사와 최종 결정은 심사자가 합니다.</p>
+
+  <h3 class="sub">서로 다른 조작을 보는 3개 모델</h3>
+  <div class="grid g3">
+    <div class="card model"><h4>TruFor</h4><p class="role">포토샵 등 전통적 편집 탐지</p><dl><dt>출력</dt><dd>조작 점수 · 위치 히트맵</dd><dt>학습</dt><dd>파인튜닝 (30 epoch, best: epoch 4)</dd><dt>환경</dt><dd>Python 3.8 · torch 1.11</dd></dl></div>
+    <div class="card model"><h4>FUSED</h4><p class="role">생성형 AI 인페인팅 탐지</p><dl><dt>출력</dt><dd>확률 맵 · 이진 마스크</dd><dt>학습</dt><dd>파인튜닝 (30 epoch, best: epoch 24)</dd><dt>환경</dt><dd>Python 3.11 · torch 2.9</dd></dl></div>
+    <div class="card model"><h4>Recapture</h4><p class="role">화면 재촬영 탐지</p><dl><dt>출력</dt><dd>재촬영 확률</dd><dt>구조</dt><dd>DINOv2 특징 추출 + MLP 분류기 (사전학습 그대로 사용)</dd><dt>환경</dt><dd>Python 3.11 · torch 2.9</dd></dl></div>
+  </div>
+
+  <h3 class="sub">학습 데이터와 파인튜닝 결과 <span class="tag team">팀</span></h3>
+  <div class="grid g2">
+    <div class="card">
+      <ul class="data-list">
+        <li><b>1,503장 = 원본 · 편집본 · 마스크 501세트</b><span>AI Hub 차량 파손 데이터 중 범퍼 · 펜더 · 헤드램프 · 후드 등 부품 10종</span></li>
+        <li><b>마스크 안에서만 조작, 바깥은 원본 픽셀로 복원</b><span>조명 · 화질 차이가 아니라 실제 조작 흔적만 학습하도록 두 번의 학습 실패 뒤 수정한 방식</span></li>
+        <li><b>dHash 그룹 단위 8 : 1 : 1 분할</b><span>같은 원본에서 나온 사진이 train과 test에 나뉘어 들어가는 누수 방지</span></li>
+      </ul>
+    </div>
+    <div class="card bars">
+      <div class="bar-group"><b>TruFor</b>
+        <div class="bar-row"><span>위치 탐지 F1</span><div class="track"><i style="width:28%"></i></div><span>0.28</span></div>
+        <div class="bar-row after"><span></span><div class="track"><i style="width:99%"></i></div><span>0.99</span></div>
+        <div class="bar-row"><span>탐지 AUC</span><div class="track"><i style="width:76%"></i></div><span>0.76</span></div>
+        <div class="bar-row after"><span></span><div class="track"><i style="width:99%"></i></div><span>0.99</span></div>
+      </div>
+      <div class="bar-group"><b>FUSED</b>
+        <div class="bar-row"><span>위치 탐지 F1</span><div class="track"><i style="width:31%"></i></div><span>0.31</span></div>
+        <div class="bar-row after"><span></span><div class="track"><i style="width:82%"></i></div><span>0.82</span></div>
+        <div class="bar-row"><span>탐지 AUC</span><div class="track"><i style="width:81%"></i></div><span>0.81</span></div>
+        <div class="bar-row after"><span></span><div class="track"><i style="width:99%"></i></div><span>0.99</span></div>
+      </div>
+      <div class="legend"><span><i style="background:var(--bar-base)"></i>파인튜닝 전 (epoch 0)</span><span><i style="background:var(--accent)"></i>파인튜닝 후 (best)</span></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- MY PART ZONE: 03 ~ 07 -->
+<div class="mine-zone">
+
+<section id="role"><div class="wrap">
+  <p class="eyebrow">03 · My Role</p>
+  <p class="my-part">My part · <span>박하영</span></p>
+  <h2>모델이 낸 결과가 심사자 화면까지 올바르게 가도록</h2>
+  <p class="desc">모델 파인튜닝은 팀원이 맡았고, 저는 <b>모델 출력 이후 구간</b>을 맡았습니다. 모델 출력의 최종 검증과 웹 프론트엔드 전체입니다.</p>
+  <div class="grid g2">
+    <div class="card role-card main">
+      <div class="role-head"><span class="tag me">주 담당</span></div>
+      <h3>웹 프론트엔드 설계 · 구현</h3>
+      <ul>
+        <li><em>설계</em><span>고객 → 내부 → 심사자 3단계 업무 흐름 정의, 7개 화면 UI/UX 설계</span></li>
+        <li><em>구현</em><span>HTML/CSS/Vanilla JS 구현, Streamlit 양방향 컴포넌트 연동 · 1초 상태 동기화</span></li>
+        <li><em>저장소</em><span>IndexedDB 청구건 저장소 설계 · localStorage 자동 마이그레이션 (사진 20장)</span></li>
+        <li><em>로직</em><span>판정 보류 · 분석 당시 임계값 기록 · ROI 기반 권장 임계값 계산</span></li>
+        <li><em>품질</em><span>XSS 방지, 반응형 · 다크모드 · aria, UI 회귀 테스트</span></li>
+      </ul>
+    </div>
+    <div class="card role-card main">
+      <div class="role-head"><span class="tag me">주 담당</span></div>
+      <h3>3개 모델 출력의 최종 검증</h3>
+      <ul>
+        <li><em>계약</em><span>세 모델 출력이 공통 JSON 계약(<code>model_io_schema.json</code>)을 지키는지 확인</span></li>
+        <li><em>출처</em><span>대체(폴백) 점수가 실제 모델 결과로 섞이지 않도록 STRICT 모드로 차단</span></li>
+        <li><em>판정</em><span>3모델 모두 완료됐을 때만 통합 점수 · 판정 생성, 아니면 "판정 보류"</span></li>
+        <li><em>근거</em><span>화면의 점수 · 히트맵이 어느 모델의 어떤 산출물인지 출처 확인</span></li>
+        <li><em>테스트</em><span>위 규칙을 단위 테스트로 고정</span></li>
+      </ul>
+    </div>
+  </div>
+  <p class="team-note"><span class="tag team">팀 공동</span> 시장조사 · AI Hub 데이터 활용 및 조작 이미지 생성 · 전체 시스템 설계 <span class="tag team">팀원 담당</span> TruFor · FUSED 파인튜닝, 모델 백엔드</p>
+</div></section>
+
+<section id="verify"><div class="wrap">
+  <p class="eyebrow">04 · Model Output Verification</p>
+  <h2>모델 점수가 화면에 오르기 전, 다섯 번 확인합니다</h2>
+  <p class="desc">세 모델은 요구하는 라이브러리 버전이 달라 각자 독립 프로세스로 실행됩니다. 따라서 각 결과가 "약속한 형식인지, 진짜 모델에서 나왔는지"를 앱 쪽에서 반드시 검증해야 합니다.</p>
+
+  <div class="card">
+    <div class="pipe">
+      <div class="model-box"><b>TruFor</b><small>일반 편집 · 합성 흔적</small></div>
+      <div class="model-box"><b>FUSED</b><small>AI 인페인팅 · 히트맵</small></div>
+      <div class="model-box"><b>Recapture</b><small>화면 재촬영 (DINOv2)</small></div>
+      <div class="arrow">→</div>
+      <div class="gate"><b>검증 게이트</b><br><small>계약 · 출처 · 완료 확인</small></div>
+    </div>
+
+    <div class="checks">
+      <div class="check"><div><h4>공통 JSON 계약 검증</h4><p>모델명이 <code>trufor / fused / recapture</code> 중 요청한 모델과 일치하는지, <code>score</code>가 0~1 범위인지 확인. 어긋나면 결과를 받지 않습니다.</p></div></div>
+      <div class="check"><div><h4>실제 모델 결과인지 출처 확인 (STRICT 모드)</h4><p>모델 실행이 실패하면 ELA · FFT 같은 대체 점수가 나올 수 있습니다. <code>meta.is_official_model</code>이 true가 아닌 결과는 거부해 <b>가짜 점수가 "정상"으로 통과하는 것</b>을 막았습니다.</p></div></div>
+      <div class="check"><div><h4>3모델 모두 완료됐을 때만 판정</h4><p>한 모델이 실패해도 나머지 모델은 끝까지 실행하되, 통합 점수는 만들지 않고 <code>INCOMPLETE</code> → 화면에서 "판정 보류"로 표시합니다. 실패한 모델을 빼고 계산하면 위험도가 낮게 왜곡되기 때문입니다.</p></div></div>
+      <div class="check"><div><h4>가중 통합 · 분석 당시 임계값 기록</h4><p>TruFor 0.35 + FUSED 0.50 + Recapture 0.15로 통합하고 임계값(기본 0.63)과 비교합니다. 사용한 임계값을 결과에 함께 저장해, 나중에 기준이 바뀌어도 당시 판정 근거를 재현할 수 있습니다.</p></div></div>
+      <div class="check"><div><h4>히트맵 출처 확인 · 테스트로 고정</h4><p>화면의 히트맵은 FUSED가 정상 완료됐을 때 FUSED가 실제로 저장한 산출물에서만 가져옵니다. 실행 순서, 폴백 거부, 실패 시 점수 미생성, 임계값 기록 등을 단위 테스트로 고정했습니다.</p></div></div>
+    </div>
+
+    <div class="outcomes">
+      <div class="outc review"><b>HUMAN_REVIEW · 검토대상</b><small>통합 점수 ≥ 임계값</small></div>
+      <div class="outc aos"><b>AOS · 정상추정</b><small>통합 점수 &lt; 임계값</small></div>
+      <div class="outc hold"><b>INCOMPLETE · 판정 보류</b><small>모델 실패 또는 비공식 결과</small></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="design"><div class="wrap">
+  <p class="eyebrow">05 · Design Strategy</p>
+  <h2>흔한 방식 대신 무엇을, 왜 정했나</h2>
+  <p class="desc">Streamlit 기본 위젯으로는 일괄 업로드 · 단계형 진행바 · 히트맵 비교가 어려워, 화면은 Vanilla JS 커스텀 컴포넌트로 만들고 Streamlit은 모델 실행 서버로 두어 양방향 이벤트로 연결했습니다.</p>
+  <div class="grid g4">
+    <div class="card why"><p class="eyebrow">Why 01</p><h3>업무 흐름대로 화면 분리</h3><div class="no">✕ 한 화면에 업로드·결과·목록</div><div class="yes">✓ 고객 → 내부 → 심사자</div><p>7개 화면을 3단계에 매핑하고 상단 내비로 현재 단계를 표시해, 각자 자기 단계 화면만 봅니다.</p></div>
+    <div class="card why"><p class="eyebrow">Why 02</p><h3>점수가 아니라 근거를</h3><div class="no">✕ 통합 점수 "82%"만 표시</div><div class="yes">✓ 어디 · 무엇이 · 왜</div><p>히트맵(어디) · 모델별 점수(무엇이) · "82.0% ≥ 63.0% · 검토대상"(왜)을 보고 심사자가 직접 승인/반송합니다.</p></div>
+    <div class="card why"><p class="eyebrow">Why 03</p><h3>기다림을 보이게</h3><div class="no">✕ 로딩 스피너만 회전</div><div class="yes">✓ "2/5 · 파일명 · FUSED 실행 중"</div><p>1초마다 진행을 갱신하고 분석 중 버튼 잠금 · 취소를 제공해 20장 분석에도 멈춤 오해와 중복 클릭이 없습니다.</p></div>
+    <div class="card why"><p class="eyebrow">Why 04</p><h3>기준값에 근거 부여</h3><div class="no">✕ 감으로 정한 임계값 63%</div><div class="yes">✓ 총비용이 최소인 임계값</div><p>후보 임계값마다 검토비용 + 놓친 조작 손실을 계산해 권장값과 절감액을 제시합니다.</p></div>
+  </div>
+</div></section>
+
+<section id="screens"><div class="wrap">
+  <p class="eyebrow">06 · Screens</p>
+  <h2>직접 구현한 화면</h2>
+  <div class="flow-legend"><span class="step s1">① 고객 접수</span>→<span class="step s2">② 내부 분석</span>→<span class="step s3">③ 심사자 판단</span><span>· 이미지를 누르면 크게 볼 수 있습니다</span></div>
+  <div class="grid g3">
+    <figure class="shot"><img src="images/ui/01-image-upload.png" alt="이미지 등록 화면" loading="lazy"><figcaption><b>이미지 등록 <span class="step s1">고객</span></b><p>드래그&amp;드롭, 형식·용량 검증(JPEG/PNG · 장당 20MB · 최대 20장), 청구번호 자동 발급</p></figcaption></figure>
+    <figure class="shot"><img src="images/ui/02-analysis-progress.png" alt="분석 진행 화면" loading="lazy"><figcaption><b>분석 진행 <span class="step s2">내부</span></b><p>4단계 진행바, "2/5 · 파일명 · 모델 실행 중" 1초 갱신, 모델별 상태</p></figcaption></figure>
+    <figure class="shot"><img src="images/ui/03-analysis-results.png" alt="분석 결과 화면" loading="lazy"><figcaption><b>분석 결과 <span class="step s2">내부</span></b><p>위험도 링 게이지, 모델별 점수, 원본↔히트맵 전환, 실패 시 "판정 보류"</p></figcaption></figure>
+    <figure class="shot"><img src="images/ui/04-claims-review.png" alt="청구 심사 목록 화면" loading="lazy"><figcaption><b>청구 심사 <span class="step s3">심사자</span></b><p>KPI 카드, 필터·검색·정렬, 10건 단위 페이지</p></figcaption></figure>
+    <figure class="shot"><img src="images/ui/05-claim-detail.png" alt="청구 상세 화면" loading="lazy"><figcaption><b>청구 상세 <span class="step s3">심사자</span></b><p>청구 정보와 이미지별 결과를 한눈에, 승인/반송 결정</p></figcaption></figure>
+    <figure class="shot"><img src="images/ui/06-image-detail.png" alt="이미지 상세 화면" loading="lazy"><figcaption><b>이미지 상세 <span class="step s3">심사자</span></b><p>원본·히트맵 나란히 비교, "82.0% ≥ 63.0%" 판정 문장, 분석 당시 임계값</p></figcaption></figure>
+  </div>
+  <div class="card" style="margin-top:16px"><b>+ ROI 임계값 설정 <span class="step s3">심사자</span></b><p style="color:var(--muted);font-size:.92rem;margin-top:4px">실제 조작 여부 라벨링 + 검토비용 · 손실률 · 평균 청구액 입력 → 총비용 최소 권장 임계값과 절감액 계산, 직접 입력도 가능</p></div>
+</div></section>
+
+<section id="trouble"><div class="wrap">
+  <p class="eyebrow">07 · Troubleshooting</p>
+  <h2>구현하면서 실제로 부딪힌 문제</h2>
+  <table class="t">
+    <thead><tr><th>문제</th><th>원인</th><th>해결 → 결과</th></tr></thead>
+    <tbody>
+      <tr><td data-k="문제">모델 1개 실패 시 "정상"으로 보임</td><td data-k="원인">실패한 모델을 빼고 점수 계산 / 폴백 점수가 섞임</td><td data-k="해결">3모델 모두 완료 + 공식 모델 결과일 때만 판정 → <b>"판정 보류"로 분리, 테스트로 고정</b></td></tr>
+      <tr><td data-k="문제">분석한 사진이 저장되지 않음</td><td data-k="원인">localStorage 용량 한계(수 MB)</td><td data-k="해결">IndexedDB로 이전 + 자동 마이그레이션 → <b>사진 20장 청구건도 저장</b></td></tr>
+      <tr><td data-k="문제">같은 분석이 두 번 실행됨</td><td data-k="원인">Streamlit이 같은 이벤트를 다시 전송</td><td data-k="해결">이벤트마다 고유 ID → <b>이미 처리한 요청은 무시</b></td></tr>
+      <tr><td data-k="문제">저장 중 화면 이동 시 결과가 섞임</td><td data-k="원인">비동기 저장 중 새 분석 시작</td><td data-k="해결">저장 직전 결과를 <b>스냅샷으로 고정</b>, 이전 요청 응답 무시</td></tr>
+    </tbody>
+  </table>
+</div></section>
+
+</div><!-- /mine-zone -->
+
+<section id="limits"><div class="wrap">
+  <p class="eyebrow">08 · Limits &amp; Next</p>
+  <h2>아직 부족한 점과 다음 단계</h2>
+  <div class="grid g3">
+    <div class="card limit"><h4>데이터 양과 부위 범위</h4><p>약 500세트 데이터로는 수많은 AI 조작 패턴과 사고 유형을 모두 덮기 어렵고, 차량 주요 부위 위주로만 학습했습니다.</p><p class="next"><b>다음</b> 데이터 대형화와 차량 전 부위로 탐지 범위 확대</p></div>
+    <div class="card limit"><h4>사진 간 교차 비교 부재</h4><p>한 청구건의 여러 사진 사이에서 손상 위치 · 빛 · 각도가 서로 맞는지는 아직 비교하지 않습니다.</p><p class="next"><b>다음</b> 같은 청구건 사진 간 정합성 교차 검증</p></div>
+    <div class="card limit"><h4>실제 업무 시스템과의 연동</h4><p>지금은 독립 웹으로 동작하며, 보험사의 손상 판독 · 사기 탐지 시스템과는 연결돼 있지 않습니다.</p><p class="next"><b>다음</b> REST API 기반 보험사 시스템 실시간 연동</p></div>
+  </div>
+</div></section>
+
+<section id="stack"><div class="wrap">
+  <p class="eyebrow">09 · Stack &amp; Learning</p>
+  <h2>기술 스택</h2>
+  <div class="stack" style="margin:14px 0 8px">
+    <span class="me">HTML / CSS</span><span class="me">Vanilla JS</span><span class="me">IndexedDB</span><span class="me">Streamlit Components</span><span class="me">JSON Schema</span><span class="me">unittest · Playwright</span>
+    <span>Python</span><span>PyTorch · CUDA</span><span>TruFor</span><span>FUSED</span><span>DINOv2</span><span>OpenCV · Pillow</span>
+  </div>
+  <p style="color:var(--muted);font-size:.85rem;margin-bottom:36px">강조 표시는 제가 직접 다룬 기술입니다.</p>
+  <p class="learn">AI 서비스의 완성도는 모델 점수가 아니라, 사용자가 결과를 믿고 행동할 수 있느냐에서 갈립니다.</p>
+</div></section>
+
+<section id="links"><div class="wrap">
+  <p class="eyebrow">10 · Links</p>
+  <h2>더 자세히 보기</h2>
+  <div class="links">
+    <a class="link-card" href="https://github.com/hayoung-create/ClaimGuard" target="_blank" rel="noopener">
+      <span class="link-icon"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M12 .5a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-6 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.6 18.3 5 18.3 5c.7 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5Z"/></svg></span>
+      <span class="link-body"><b>GitHub 저장소</b><small>전체 소스 코드 · README · 실행 방법</small></span>
+      <span class="link-arrow">→</span>
+    </a>
+    <a class="link-card" href="https://github.com/hayoung-create/ClaimGuard/blob/main/%EC%B0%A8%EB%9F%89%ED%8C%8C%EC%86%90%EC%9D%B4%EB%AF%B8%EC%A7%80%20%ED%8F%AC%EB%A0%8C%EC%8B%9D%20%EC%8B%9C%EC%8A%A4%ED%85%9C%20%EA%B2%B0%EA%B3%BC%EB%B3%B4%EA%B3%A0%EC%84%9C.pdf" target="_blank" rel="noopener">
+      <span class="link-icon"><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8M7 12l3-3 2 2 4-4"/></svg></span>
+      <span class="link-body"><b>발표자료</b><small>차량파손이미지 포렌식 시스템 결과보고서 (PDF)</small></span>
+      <span class="link-arrow">→</span>
+    </a>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <span>판정 결과는 보험사기 확정이 아닌 추가 검토 지원 정보이며, 최종 결정은 심사자가 합니다.</span>
+  <span>박하영 · 2026 · <a href="https://github.com/hayoung-create/ClaimGuard">GitHub</a></span>
+</div></footer>
+
+<dialog class="lb" id="lb"><img alt=""></dialog>
+<script>
+const lb=document.getElementById('lb'),lbImg=lb.querySelector('img');
+document.querySelectorAll('figure.shot img, .compare img').forEach(img=>img.addEventListener('click',()=>{lbImg.src=img.src;lbImg.alt=img.alt;lb.showModal()}));
+lb.addEventListener('click',()=>lb.close());
+</script>
+</body>
+</html>

@@ -1,5 +1,7 @@
 # ClaimGuard Vision
 
+> **프로젝트 페이지:** https://hayoung-create.github.io/ClaimGuard/
+
 자동차보험 청구 사고사진의 AI 인페인팅, 일반 편집, 화면 재촬영 흔적을 분석하고 심사 우선순위를 제안하는 실행형 프로토타입입니다.
 
 ## 👤 담당 역할
